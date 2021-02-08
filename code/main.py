@@ -1,5 +1,6 @@
-# Main .py file
+# Main python file
 
+import pandas as pd
 from scraping import *
 
 SKYTRAX_URLS = {
@@ -12,4 +13,11 @@ SKYTRAX_URLS = {
 }
 
 if __name__ == "__main__":
-    # TO FILL
+    data = pd.DataFrame([], columns=["date", "comment", "rating"])
+    for airline in SKYTRAX_URLS.keys():
+        print(f"\n> Scraping {airline} reviews on Skytrax")
+        scraper = SkytraxScraper(SKYTRAX_URLS.get(airline))
+        reviews = scraper.scrape(n_pages=2)
+        reviews["airline"] = airline
+        data = data.append(reviews, ignore_index=True)
+    data.to_csv("data/reviews.csv", index=False)

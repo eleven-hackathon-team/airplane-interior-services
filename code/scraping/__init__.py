@@ -1,2 +1,2 @@
-from skytrax_scraping.py import SkytraxScraper
+from scraping.skytrax_scraping import SkytraxScraper
 

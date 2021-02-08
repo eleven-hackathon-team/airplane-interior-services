@@ -83,6 +83,8 @@ class SkytraxScraper():
                 print("Last page reached.")
                 break
             current_page_no += 1
+        self.driver.close()
         self.data.columns = ["date", "comment", "rating"]
+        self.data.reset_index(inplace=True, drop=True)
         
         return self.data
