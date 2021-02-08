@@ -13,11 +13,11 @@ SKYTRAX_URLS = {
 }
 
 if __name__ == "__main__":
-    data = pd.DataFrame([], columns=["date", "comment", "rating"])
+    data = pd.DataFrame([])
     for airline in SKYTRAX_URLS.keys():
         print(f"\n> Scraping {airline} reviews on Skytrax")
         scraper = SkytraxScraper(SKYTRAX_URLS.get(airline))
-        reviews = scraper.scrape(n_pages=2)
+        reviews = scraper.scrape(n_pages=1)
         reviews["airline"] = airline
-        data = data.append(reviews, ignore_index=True)
-    data.to_csv("data/reviews.csv", index=False)
+        data = pd.concat([data, reviews], axis=0, ignore_index=True)
+    data.to_csv("data/skytrax_reviews.csv", index=False, sep="|")

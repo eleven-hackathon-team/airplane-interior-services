@@ -18,14 +18,26 @@ class SkytraxScraper():
         self.driver = webdriver.Chrome()
         self.driver.get(url)
         self.data = pd.DataFrame()
+        self.additional_fields = [
+            "aircraft", 
+            "cabin_flown", 
+            "seat_comfort"
+        ]
+        self.rating_fields = [
+            "cabin_staff_service", 
+            "food_and_beverage", 
+            "inflight_entertainment", 
+            "ground_service",
+            "wifi_and_connectivity", 
+            "value_for_money"
+        ]
       
     
     def get_reviews(self):
         self.current_reviews = self.driver.find_elements_by_xpath("//article[@itemprop='review']")
     
-    
-    @staticmethod
-    def extract_content(review):
+
+    def extract_content(self, review):
         """Extracts the main information from the review.
 
         Parameters
@@ -36,15 +48,36 @@ class SkytraxScraper():
         Returns
         -------
         list
-            date of the review, content of the review and rating associated.
+            date of the review, content of the review and rating associated, and additional fields specified.
         """
+        # Basic information (date, content and rating)
         date = review.find_element_by_xpath(".//time").get_attribute("datetime")
         title = review.find_element_by_xpath(".//h2[@class='text_header']").text.replace('"', "")
         content = review.find_element_by_xpath(".//div[@class='text_content ']").text.replace("✅ Trip Verified |", "")
         comment = ".".join([title, content])
         rating = review.find_element_by_xpath(".//span[@itemprop='ratingValue']").text
+        review_data = [date, comment, rating]
         
-        return [date, comment, rating]
+        # Additional fields 
+        for field in self.additional_fields:
+            field_header = review.find_elements_by_xpath(f".//td[@class='review-rating-header {field} ']")
+            if len(field_header) > 0: # if the field has not been filled by the customer, len(field_header)=0
+                field_content = field_header[0].find_element_by_xpath("./../td[2]").text
+            else:
+                field_content = ""
+            review_data.append(field_content)
+        
+        # Rating fields
+        for field in self.rating_fields:
+            field_header = review.find_elements_by_xpath(f".//td[@class='review-rating-header {field}']")
+            if len(field_header) > 0:
+                # the text from the last filled star indicates the rating
+                field_rating = field_header[0].find_elements_by_xpath("./../td[2]/span[@class='star fill']")[-1].text 
+            else:
+                field_rating = ""
+            review_data.append(field_rating)
+        
+        return review_data
         
         
     def scrape_current_page(self):
@@ -84,7 +117,7 @@ class SkytraxScraper():
                 break
             current_page_no += 1
         self.driver.close()
-        self.data.columns = ["date", "comment", "rating"]
+        self.data.columns = ["date", "comment", "rating"] + self.additional_fields + self.rating_fields
         self.data.reset_index(inplace=True, drop=True)
         
         return self.data
