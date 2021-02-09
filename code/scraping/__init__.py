@@ -1,0 +1,2 @@
+from scraping.skytrax_scraping import SkytraxScraper
+from scraping.tripadvisor_scraping import TripAdvisorScraper
