@@ -17,7 +17,7 @@ if __name__ == "__main__":
     for airline in SKYTRAX_URLS.keys():
         print(f"\n> Scraping {airline} reviews on Skytrax")
         scraper = SkytraxScraper(SKYTRAX_URLS.get(airline))
-        reviews = scraper.scrape(n_pages=1)
+        reviews = scraper.scrape()
         reviews["airline"] = airline
         data = pd.concat([data, reviews], axis=0, ignore_index=True)
     data.to_csv("data/skytrax_reviews.csv", index=False, sep="|")

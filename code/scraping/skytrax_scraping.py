@@ -85,8 +85,11 @@ class SkytraxScraper():
         """
         self.get_reviews()
         for review in self.current_reviews:
-            content = self.extract_content(review)
-            self.data = self.data.append([content])
+            try:
+                content = self.extract_content(review)
+                self.data = self.data.append([content])
+            except:
+                pass
         
         
     def go_to_next_page(self):
