@@ -8,14 +8,16 @@ class SkytraxScraper():
     """A class to scrape www.airlinequality.com 
     """
     
-    def __init__(self, url):
+    def __init__(self, driver, url):
         """
         Parameters
         ----------
+        driver : selenium.webdriver.chrome.webdriver.WebDriver
+            The webdriver object to use in order to do the scraping.
         url : string
             The URL of the website to scrape.
         """
-        self.driver = webdriver.Chrome()
+        self.driver = driver
         self.driver.get(url)
         self.data = pd.DataFrame()
         self.additional_fields = [
@@ -119,7 +121,6 @@ class SkytraxScraper():
                 print("Last page reached.")
                 break
             current_page_no += 1
-        self.driver.close()
         self.data.columns = ["date", "comment", "rating"] + self.additional_fields + self.rating_fields
         self.data.reset_index(inplace=True, drop=True)
         
