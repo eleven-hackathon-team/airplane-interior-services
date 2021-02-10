@@ -1,6 +1,11 @@
 import pandas as pd
 import re
+import nltk
+import numpy as np 
 
+from sentence_transformers import SentenceTransformer
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
 
 
 class Preprocessor():
@@ -19,32 +24,69 @@ class Preprocessor():
         usecols : list, optional
             Columns to use, by default ["comment"]
         """
+        print("> Fetching data")
         df_seatguru = pd.read_csv(f"{path_data}seatguru_reviews.csv", sep="|", usecols=usecols)
         df_skytrax = pd.read_csv(f"{path_data}skytrax_reviews.csv", sep="|", usecols=usecols)
         df_tripadvisor = pd.read_csv(f"{path_data}tripadvisor_reviews.csv", sep="|", usecols=usecols)
 
         self.data = pd.concat([df_seatguru, df_skytrax, df_tripadvisor], axis=0, ignore_index=True)
+        self.data.drop(self.data.loc[self.data.comment.duplicated()].index, axis=0, inplace=True)
     
 
-    def _clean_comments(self, char_to_remove=[]):
-        """Lowers comments and removes specified characters.
+    def _filter_comments(self, min_length=0, max_length=np.inf):
+        """Filters comments based on the number of characters
 
         Parameters
         ----------
-        char_to_remove : list, optional
-            Characters to remove, by default []
+        min_length : int, optional
+            minimum length, by default 0
+        max_length : int, optional
+            maximum length, by default np.inf
         """
-        self.data.comment = self.data.comment.apply(lambda string: string.lower())
-        if len(char_to_remove) > 0:
-            self.data.comment = self.data.comment.apply(lambda string: re.sub(char_to_remove, "", string))
+        print("> Filtering comments")
+        self.data.drop(
+            self.data.loc[self.data.comment.apply(lambda sentence: len(sentence)) < min_length].index,
+            axis=0, 
+            inplace=True
+        )
+        self.data.drop(
+            self.data.loc[self.data.comment.apply(lambda sentence: len(sentence)) > max_length].index,
+            axis=0, 
+            inplace=True
+        )
+
+
+    def _clean_comments(self):
+        """Lowers comments and removes special characters.
+        """
+        print("> Cleaning comments")
+        self.data["comment_cleaned"] = self.data.comment.apply(lambda string: re.sub("[^a-z ]", "", string.lower()))
+
+
+    def _tokenize(self):
+        print("> Tokenizing")
+        nltk.download("punkt")
+        self.data["comment_tokenized"] = self.data.comment_cleaned.apply(lambda sentence: word_tokenize(sentence))
+
+
+    def _embed(self, method="bert"):
+        """Performs embedding on comments.
+
+        Parameters
+        ----------
+        method : str, optional
+            Model used to perform embedding, by default "bert"
+        """
+        if method == "bert":
+            model = SentenceTransformer('distilbert-base-nli-mean-tokens')
+            self.embeddings = model.encode(self.data.comment_cleaned.values, show_progress_bar=True)
+        if method == "doc2vec":
+            # TO DO
+            return None
+
     
 
-    def _tokenize(self, method="bert"):
-        # TO DO
-        return None
-    
-
-    def preprocess(self, path_data="./", usecols=["comment"], char_to_remove=[], tokenize=False, method="bert"):
+    def preprocess(self, path_data="./", usecols=["comment"], min_length=0, max_length=np.inf, tokenize=False):
         """Fetches the data, cleans it and, if specified, tokenizes it.
 
         Parameters
@@ -53,12 +95,12 @@ class Preprocessor():
             Path where the data is located, by default "./"
         usecols : list, optional
             Columns to use, by default ["comment"]
-        char_to_remove : list, optional
-            Characters to remove, by default []
+        min_length : int, optional
+            minimum length, by default 0
+        max_length : int, optional
+            maximum length, by default np.inf
         tokenize : bool, optional
             Whether to tokenize the data or not, by default False
-        method : str, optional
-            The method to use for tokenizing the data, by default "bert"
 
         Returns
         -------
@@ -66,7 +108,8 @@ class Preprocessor():
             The preprocessed data
         """
         self._fetch_data(path_data, usecols)
-        self._clean_comments(char_to_remove)
+        self._filter_comments(min_length, max_length)
+        self._clean_comments()
         if tokenize:
-            self._tokenize(method)
+            self._tokenize()
         return self.data
