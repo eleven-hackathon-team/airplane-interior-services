@@ -35,11 +35,11 @@ class SkytraxScraper():
         ]
       
     
-    def get_reviews(self):
+    def _get_reviews(self):
         self.current_reviews = self.driver.find_elements_by_xpath("//article[@itemprop='review']")
     
 
-    def extract_content(self, review):
+    def _extract_content(self, review):
         """Extracts the main information from the review.
 
         Parameters
@@ -82,19 +82,19 @@ class SkytraxScraper():
         return review_data
         
         
-    def scrape_current_page(self):
+    def _scrape_current_page(self):
         """Extracts information from all reviews on the current page.
         """
-        self.get_reviews()
+        self._get_reviews()
         for review in self.current_reviews:
             try:
-                content = self.extract_content(review)
+                content = self._extract_content(review)
                 self.data = self.data.append([content])
             except:
                 pass
         
         
-    def go_to_next_page(self):
+    def _go_to_next_page(self):
             self.driver.find_element_by_partial_link_text(">>").click()
     
     
@@ -114,9 +114,9 @@ class SkytraxScraper():
         current_page_no = 1
         while current_page_no <= n_pages:
             print(f"Scraping page no {current_page_no}")
-            self.scrape_current_page()
+            self._scrape_current_page()
             try:
-                self.go_to_next_page()
+                self._go_to_next_page()
             except:
                 print("Last page reached.")
                 break
