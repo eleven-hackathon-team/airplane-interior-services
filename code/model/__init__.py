@@ -1,0 +1,1 @@
+from model.sentiment_analysis.vader import VaderModel

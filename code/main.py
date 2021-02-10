@@ -3,6 +3,8 @@
 import pandas as pd
 from selenium import webdriver
 from scraping import *
+from preprocessing import *
+from model import *
 
 SKYTRAX_URLS = {
     "Air France": "https://www.airlinequality.com/airline-reviews/air-france/",
@@ -23,26 +25,34 @@ TRIPADVISOR_URLS = {
 }
 
 if __name__ == "__main__":
-    driver = webdriver.Chrome()
-    
-    # Scraping Skytrax 
-    data_skytrax = pd.DataFrame([])
-    for airline in SKYTRAX_URLS.keys():
-        print(f"\n> Scraping {airline} reviews on Skytrax")
-        scraper = SkytraxScraper(driver=driver, url=SKYTRAX_URLS.get(airline))
-        reviews = scraper.scrape()
-        reviews["airline"] = airline
-        data_skytrax = pd.concat([data_skytrax, reviews], axis=0, ignore_index=True)
-    data_skytrax.to_csv("data/skytrax_reviews.csv", index=False, sep="|")
 
-    # Scraping TripAdvisor
-    data_tripadvisor = pd.DataFrame([])
-    for airline in TRIPADVISOR_URLS.keys():
-        print(f"\n> Scraping {airline} reviews on TripAdvisor")
-        scraper = TripAdvisorScraper(driver=driver, url=TRIPADVISOR_URLS.get(airline))
-        reviews = scraper.scrape()
-        reviews["airline"] = airline
-        data_tripadvisor = pd.concat([data_tripadvisor, reviews], axis=0, ignore_index=True)
-    data_tripadvisor.to_csv("data/tripadvisor_reviews.csv", index=False, sep="|")  
+    # # Scraping
+    # driver = webdriver.Chrome()
+    # # Scraping Skytrax 
+    # data_skytrax = pd.DataFrame([])
+    # for airline in SKYTRAX_URLS.keys():
+    #     print(f"\n> Scraping {airline} reviews on Skytrax")
+    #     scraper = SkytraxScraper(driver=driver, url=SKYTRAX_URLS.get(airline))
+    #     reviews = scraper.scrape()
+    #     reviews["airline"] = airline
+    #     data_skytrax = pd.concat([data_skytrax, reviews], axis=0, ignore_index=True)
+    # data_skytrax.to_csv("data/skytrax_reviews.csv", index=False, sep="|")
+    # # Scraping TripAdvisor
+    # data_tripadvisor = pd.DataFrame([])
+    # for airline in TRIPADVISOR_URLS.keys():
+    #     print(f"\n> Scraping {airline} reviews on TripAdvisor")
+    #     scraper = TripAdvisorScraper(driver=driver, url=TRIPADVISOR_URLS.get(airline))
+    #     reviews = scraper.scrape(n_pages=2000)
+    #     reviews["airline"] = airline
+    #     data_tripadvisor = pd.concat([data_tripadvisor, reviews], axis=0, ignore_index=True)
+    # data_tripadvisor.to_csv("data/tripadvisor_reviews.csv", index=False, sep="|")  
+    # driver.close()  
 
-    driver.close()  
+
+    # Preprocessing
+    data = Preprocessor().preprocess(path_data="data/")
+    print(data.shape)
+
+    # Modelling
+    sa_model = VaderModel()
+    print(sa_model.predict(data.comment.values[0]))
