@@ -14,8 +14,18 @@ STOPWORDS = stopwords.words("english")
 
 class Preprocessor():
 
-    def __init__(self):
-        self.data = None
+    def __init__(self, existing_data=None):
+        """
+        Parameters
+        ----------
+        existing_data : str, optional
+            path of the already preprocessed data file if any, by default None
+        """
+        if existing_data is not None:
+            print("> Fetching existing preprocessed data")
+            self.data = pd.read_csv(existing_data, sep="|")
+        else:
+            self.data = None
     
 
     def _fetch_data(self, path_data="./", usecols=["comment"]):
@@ -88,22 +98,6 @@ class Preprocessor():
         )
 
 
-    def _embed(self, method="bert"):
-        """Performs embedding on comments.
-
-        Parameters
-        ----------
-        method : str, optional
-            Model used to perform embedding, by default "bert"
-        """
-        if method == "bert":
-            model = SentenceTransformer('distilbert-base-nli-mean-tokens')
-            self.embeddings = model.encode(self.data.comment_cleaned.values, show_progress_bar=True)
-        if method == "doc2vec":
-            # TO DO
-            return None
-
-
     def preprocess(self, path_data="./", usecols=["comment"], min_length=0, max_length=np.inf,
      stopwords=STOPWORDS, allowed_postags=['NOUN','ADJ','VERB','ADV']):
         """Fetches the data and preprocesses it.
@@ -126,10 +120,11 @@ class Preprocessor():
         pandas.DataFrame
             The preprocessed data
         """
-        self._fetch_data(path_data, usecols)
-        self._filter_comments(min_length, max_length)
-        self._clean_comments()
-        self._remove_stopwords(stopwords)
-        self._lemmatize_comments(allowed_postags)
+        if self.data is None:
+            self._fetch_data(path_data, usecols)
+            self._filter_comments(min_length, max_length)
+            self._clean_comments()
+            self._remove_stopwords(stopwords)
+            self._lemmatize_comments(allowed_postags)
 
         return self.data

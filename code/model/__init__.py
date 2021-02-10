@@ -1,1 +1,2 @@
 from model.sentiment_analysis.vader import VaderModel
+from model.topic_modelling.bertopic import BERTopicModel
