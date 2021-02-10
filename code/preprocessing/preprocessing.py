@@ -2,10 +2,14 @@ import pandas as pd
 import re
 import nltk
 import numpy as np 
+import spacy
 
 from sentence_transformers import SentenceTransformer
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
+
+
+STOPWORDS = stopwords.words("english")
 
 
 class Preprocessor():
@@ -63,10 +67,25 @@ class Preprocessor():
         self.data["comment_cleaned"] = self.data.comment.apply(lambda string: re.sub("[^a-z ]", "", string.lower()))
 
 
-    def _tokenize(self):
-        print("> Tokenizing")
-        nltk.download("punkt")
-        self.data["comment_tokenized"] = self.data.comment_cleaned.apply(lambda sentence: word_tokenize(sentence))
+    def _remove_stopwords(self, stopwords=STOPWORDS):
+        print("> Removing stopwords")
+        self.data["comment_no_stopwords"] = self.data.comment_cleaned.apply(
+            lambda sentence: " ".join([word for word in sentence.split(" ") if word not in stopwords])
+        )
+
+
+    def _lemmatize_comments(self, allowed_postags=['NOUN','ADJ','VERB','ADV']):
+        """
+        Parameters
+        ----------
+        allowed_postags : list[str], optional
+            Type of tokens to keep, by default ['NOUN','ADJ','VERB','ADV']
+        """
+        print("> Lemmatizing comments")
+        nlp = spacy.load("en_core_web_sm", disable=['parser', 'ner'])
+        self.data["comment_lemmatized"] = self.data.comment_no_stopwords.apply(
+            lambda sentence: " ".join([str(token) for token in nlp(sentence) if token.pos_ in allowed_postags])
+        )
 
 
     def _embed(self, method="bert"):
@@ -84,10 +103,10 @@ class Preprocessor():
             # TO DO
             return None
 
-    
 
-    def preprocess(self, path_data="./", usecols=["comment"], min_length=0, max_length=np.inf, tokenize=False):
-        """Fetches the data, cleans it and, if specified, tokenizes it.
+    def preprocess(self, path_data="./", usecols=["comment"], min_length=0, max_length=np.inf,
+     stopwords=STOPWORDS, allowed_postags=['NOUN','ADJ','VERB','ADV']):
+        """Fetches the data and preprocesses it.
 
         Parameters
         ----------
@@ -99,8 +118,8 @@ class Preprocessor():
             minimum length, by default 0
         max_length : int, optional
             maximum length, by default np.inf
-        tokenize : bool, optional
-            Whether to tokenize the data or not, by default False
+        allowed_postags : list[str], optional
+            Type of tokens to keep, by default ['NOUN','ADJ','VERB','ADV']
 
         Returns
         -------
@@ -110,6 +129,7 @@ class Preprocessor():
         self._fetch_data(path_data, usecols)
         self._filter_comments(min_length, max_length)
         self._clean_comments()
-        if tokenize:
-            self._tokenize()
+        self._remove_stopwords(stopwords)
+        self._lemmatize_comments(allowed_postags)
+
         return self.data
