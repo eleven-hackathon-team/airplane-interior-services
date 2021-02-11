@@ -1,2 +1,4 @@
 from model.sentiment_analysis.vader import VaderModel
+from model.sentiment_analysis.textblob import TextblobModel
+from model.sentiment_analysis.flair_model import FlairModel
 from model.topic_modelling.bertopic import BERTopicModel
