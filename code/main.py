@@ -70,5 +70,5 @@ if __name__ == "__main__":
     sa_model = VaderModel()
     data["polarity_score"] = data.comment.apply(lambda comment: sa_model.predict(comment))
 
-    data[["comment", "topic_idx", "polarity_score"]].to_csv("data/output.csv")
+    data[["comment", "topic_idx", "polarity_score"]].to_csv("data/output.csv", index=False, sep="|")
 
