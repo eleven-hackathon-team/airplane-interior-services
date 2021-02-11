@@ -4,7 +4,7 @@ import pandas as pd
 from selenium import webdriver
 from scraping import *
 from preprocessing import *
-from model import *
+from model import BERTopicModel, VaderModel
 
 SKYTRAX_URLS = {
     "Air France": "https://www.airlinequality.com/airline-reviews/air-france/",
