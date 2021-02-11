@@ -61,6 +61,7 @@ if __name__ == "__main__":
     print("\n\n>> Topic Modelling")
     tm_model = BERTopicModel()
     clusters = tm_model.cluster_reviews(data.comment_lemmatized.values, n_topics_max=50)
+    tm_model.save_model(path_save="model/")
     topics = tm_model.get_topics_description()
     data["topic_idx"] = pd.Series(clusters)
     topics.to_csv("data/topics.csv", index=False, sep=";")
